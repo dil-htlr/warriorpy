@@ -36,16 +36,18 @@ function loadEffects(unit, effects = {}) {
  * @param {Object} warriorConfig The config of the warrior.
  * @param {Floor} floor The floor of the level.
  * @param {string} [playerCode] The code of the player.
+ * @param {string} [languageId] The language ID (default: 'javascript').
  */
 function loadWarrior(
   { name, character, color, maxHealth, abilities, effects, position },
   floor,
   playerCode,
+  languageId = 'javascript',
 ) {
   const warrior = new Warrior(name, character, color, maxHealth);
   loadAbilities(warrior, abilities);
   loadEffects(warrior, effects);
-  warrior.playTurn = playerCode ? loadPlayer(playerCode) : () => {};
+  warrior.playTurn = playerCode ? loadPlayer(playerCode, languageId) : () => {};
   floor.addWarrior(warrior, position);
 }
 
@@ -91,6 +93,7 @@ function loadUnit(
  *
  * @param {Object} levelConfig The config of the level.
  * @param {string} [playerCode] The code of the player.
+ * @param {string} [languageId] The language ID (default: 'javascript').
  *
  * @returns {Level} The loaded level.
  */
@@ -103,12 +106,13 @@ function loadLevel(
     floor: { size, stairs, warrior, units = [] },
   },
   playerCode,
+  languageId = 'javascript',
 ) {
   const { width, height } = size;
   const stairsLocation = [stairs.x, stairs.y];
   const floor = new Floor(width, height, stairsLocation);
 
-  loadWarrior(warrior, floor, playerCode);
+  loadWarrior(warrior, floor, playerCode, languageId);
   units.forEach(unit => loadUnit(unit, floor));
 
   return new Level(number, description, tip, clue, floor);

@@ -2,11 +2,11 @@ import fs from 'fs';
 import path from 'path';
 
 import getGradeLetter from '@warriorjs/helper-get-grade-letter';
+import { languageRegistry } from '@warriorjs/core';
 
 import GameError from './GameError';
 
 const profileFile = '.profile';
-const playerCodeFile = 'Player.js';
 const readmeFile = 'README.md';
 
 /** Class representing a profile. */
@@ -60,8 +60,8 @@ class Profile {
   /**
    * Checks if the given path is a profile directory.
    *
-   * For a directory to be considered a profile directory, it must contain two
-   * files: `.profile` and `Player.js`.
+   * For a directory to be considered a profile directory, it must contain a
+   * `.profile` file and a player code file (with any supported language extension).
    *
    * @param {string} profileDirectoryPath The path to validate.
    *
@@ -69,12 +69,20 @@ class Profile {
    */
   static isProfileDirectory(profileDirectoryPath) {
     const profileFilePath = path.join(profileDirectoryPath, profileFile);
-    const playerCodeFilePath = path.join(profileDirectoryPath, playerCodeFile);
+
     try {
-      return (
-        fs.statSync(profileFilePath).isFile() &&
-        fs.statSync(playerCodeFilePath).isFile()
-      );
+      if (!fs.statSync(profileFilePath).isFile()) {
+        return false;
+      }
+
+      // Check if any player code file exists with supported language extensions
+      const files = fs.readdirSync(profileDirectoryPath);
+      const hasPlayerCode = files.some(file => {
+        const match = file.match(/^Player\.(js|py|cs)$/);
+        return match !== null;
+      });
+
+      return hasPlayerCode;
     } catch (err) {
       if (err.code === 'ENOENT') {
         return false;
@@ -130,11 +138,13 @@ class Profile {
    * @param {string} warriorName The name of the warrior.
    * @param {Tower} tower The tower.
    * @param {string} directoryPath The path to the directory of the profile.
+   * @param {string} languageId The programming language ID (default: 'javascript').
    */
-  constructor(warriorName, tower, directoryPath) {
+  constructor(warriorName, tower, directoryPath, languageId = 'javascript') {
     this.warriorName = warriorName;
     this.tower = tower;
     this.directoryPath = directoryPath;
+    this.languageId = languageId;
     this.levelNumber = 0;
     this.score = 0;
     this.clue = false;
@@ -175,7 +185,11 @@ class Profile {
    * @returns {string} The path to the player code file.
    */
   getPlayerCodeFilePath() {
-    return path.join(this.directoryPath, playerCodeFile);
+    const adapter = languageRegistry.get(this.languageId || 'javascript');
+    if (!adapter) {
+      throw new Error(`Unknown language: ${this.languageId}`);
+    }
+    return path.join(this.directoryPath, adapter.getTemplateFilename());
   }
 
   /**
@@ -320,6 +334,7 @@ class Profile {
     return {
       warriorName: this.warriorName,
       towerId: this.tower.id,
+      languageId: this.languageId,
       levelNumber: this.levelNumber,
       clue: this.clue,
       epic: this.epic,

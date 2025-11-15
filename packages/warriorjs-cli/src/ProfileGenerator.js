@@ -2,19 +2,31 @@ import fs from 'fs';
 import path from 'path';
 
 import ejs from 'ejs';
+import { languageRegistry } from '@warriorjs/core';
 
 import getFloorMap from './utils/getFloorMap';
 import getFloorMapKey from './utils/getFloorMapKey';
 
 const templatesPath = path.resolve(__dirname, '..', 'templates');
-export const PLAYER_CODE_TEMPLATE_FILE_PATH = path.join(
-  templatesPath,
-  'Player.js',
-);
 export const README_TEMPLATE_FILE_PATH = path.join(
   templatesPath,
   'README.md.ejs',
 );
+
+/**
+ * Gets the player code template file path for a given language.
+ *
+ * @param {string} languageId The language ID.
+ *
+ * @returns {string} The path to the template file.
+ */
+export function getPlayerCodeTemplateFilePath(languageId) {
+  const adapter = languageRegistry.get(languageId);
+  if (!adapter) {
+    throw new Error(`Unknown language: ${languageId}`);
+  }
+  return path.join(templatesPath, adapter.getTemplateFilename());
+}
 
 /** Class representing a profile generator. */
 class ProfileGenerator {
@@ -56,13 +68,13 @@ class ProfileGenerator {
   }
 
   /**
-   * Generates the player code file (Player.js).
+   * Generates the player code file (e.g., Player.js, Player.py, Player.cs).
    */
   generatePlayerCodeFile() {
-    fs.copyFileSync(
-      PLAYER_CODE_TEMPLATE_FILE_PATH,
-      this.profile.getPlayerCodeFilePath(),
+    const templateFilePath = getPlayerCodeTemplateFilePath(
+      this.profile.languageId || 'javascript',
     );
+    fs.copyFileSync(templateFilePath, this.profile.getPlayerCodeFilePath());
   }
 }
 
