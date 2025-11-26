@@ -2,6 +2,11 @@
  * Loads the player code and returns the playTurn function.
  * Browser-compatible version using Function constructor instead of Node.js vm.
  *
+ * Security Note: This uses the Function constructor to execute player-provided code.
+ * This is intentional for a programming game where players write their own code.
+ * The code runs only in the player's own browser with no server-side execution.
+ * The game API (warrior object) only exposes safe game actions.
+ *
  * @param {string} playerCode The code of the player.
  *
  * @returns {Function} The playTurn function.

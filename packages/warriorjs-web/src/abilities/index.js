@@ -155,9 +155,18 @@ export function think() {
   return unit => ({
     description: 'Thinks out loud (`console.log` replacement).',
     perform(...args) {
-      const thought = args.length > 0 ? args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-      ).join(' ') : 'nothing';
+      const thought = args.length > 0 ? args.map(arg => {
+        if (arg === null) return 'null';
+        if (arg === undefined) return 'undefined';
+        if (typeof arg === 'object') {
+          try {
+            return JSON.stringify(arg);
+          } catch (e) {
+            return '[object Object]';
+          }
+        }
+        return String(arg);
+      }).join(' ') : 'nothing';
       unit.log(`thinks ${thought}`);
     },
   });

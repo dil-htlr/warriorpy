@@ -60,6 +60,7 @@ typings/
 
 # Build directories
 packages/*/lib/
+packages/warriorjs-web/dist/
 
 # Website
 website/translated_docs
