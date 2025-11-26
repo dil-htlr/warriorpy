@@ -32,15 +32,31 @@ The `LanguageRegistry` manages all available language adapters. It provides:
    - Player code executed in isolated sandbox
    - Template: `Player.js`
 
-2. **Python** (Architecture Only)
-   - Adapter structure in place
-   - Requires implementation of Python bridge
+2. **Python** (Fully Implemented)
+   - Uses Filbert to transpile Python to JavaScript
+   - Transpiled code runs in the same JavaScript VM
+   - No external Python runtime required
    - Template: `Player.py`
 
 3. **C#** (Architecture Only)
    - Adapter structure in place
    - Requires implementation of C# bridge via .NET CLI
    - Template: `Player.cs`
+
+### Python Implementation Details
+
+The Python adapter uses a transpilation approach:
+
+1. **Filbert** parses Python code into a JavaScript-compatible AST
+2. **Escodegen** generates JavaScript code from the AST
+3. The generated JavaScript runs in the Node.js VM (same as JavaScript adapter)
+
+This approach:
+- ✅ Avoids spawning external Python processes
+- ✅ Reuses the existing JavaScript VM infrastructure
+- ✅ Provides fast execution with no IPC overhead
+- ✅ Works in environments without Python installed
+- ⚠️ Supports Python 2.x syntax (Filbert limitation)
 
 ## Adding a New Language
 

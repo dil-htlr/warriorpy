@@ -4,7 +4,7 @@ import ejs from 'ejs';
 import mock from 'mock-fs';
 
 import ProfileGenerator, {
-  PLAYER_CODE_TEMPLATE_FILE_PATH,
+  getPlayerCodeTemplateFilePath,
   README_TEMPLATE_FILE_PATH,
 } from './ProfileGenerator';
 import getFloorMap from './utils/getFloorMap';
@@ -21,6 +21,7 @@ describe('ProfileGenerator', () => {
     profile = {
       getPlayerCodeFilePath: () => '/path/to/profile/player-code',
       getReadmeFilePath: () => '/path/to/profile/readme',
+      languageId: 'javascript',
     };
     level = {
       floor: {
@@ -81,8 +82,9 @@ describe('ProfileGenerator', () => {
   });
 
   test.skip('generates player code file', () => {
+    const playerCodeTemplatePath = getPlayerCodeTemplateFilePath('javascript');
     mock({
-      [PLAYER_CODE_TEMPLATE_FILE_PATH]: 'player-code',
+      [playerCodeTemplatePath]: 'player-code',
       '/path/to/profile': {},
     });
     profileGenerator.generatePlayerCodeFile();

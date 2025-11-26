@@ -1,14 +1,18 @@
+import vm from 'vm';
+
+import filbert from 'filbert';
+import escodegen from 'escodegen';
+
 import LanguageAdapter from './LanguageAdapter';
+
+const playerCodeTimeout = 3000;
 
 /**
  * Language adapter for Python.
  *
- * This is a placeholder implementation that demonstrates the structure.
- * A full implementation would require:
- * 1. A Python bridge/wrapper to execute player code
- * 2. Inter-process communication between Node.js and Python
- * 3. Serialization of the warrior API state
- * 4. Deserialization of player actions
+ * Uses Filbert to transpile Python code to JavaScript, which is then
+ * executed in the same VM as the JavaScript adapter. This avoids the
+ * need for external Python processes or IPC.
  */
 class PythonAdapter extends LanguageAdapter {
   /**
@@ -46,21 +50,88 @@ class PythonAdapter extends LanguageAdapter {
   /**
    * @inheritdoc
    */
-  // eslint-disable-next-line class-methods-use-this, no-unused-vars
+  // eslint-disable-next-line class-methods-use-this
   loadPlayer(playerCode) {
-    // TODO: Implement Python code execution
-    // For now, throw a not implemented error with helpful message
-    const error = new Error(
-      'Python support is not yet fully implemented. This adapter provides the structure for future implementation.\n\n' +
-        'To implement Python support:\n' +
-        '1. Create a Python wrapper that bridges the warrior API\n' +
-        '2. Set up inter-process communication (e.g., via stdin/stdout or sockets)\n' +
-        '3. Serialize warrior state to JSON and send to Python process\n' +
-        '4. Deserialize actions from Python and execute on warrior object\n' +
-        '5. Handle errors and timeouts appropriately',
-    );
-    error.code = 'NotImplemented';
-    throw error;
+    let jsCode;
+
+    // Parse and transpile Python to JavaScript
+    try {
+      const ast = filbert.parse(playerCode);
+      jsCode = escodegen.generate(ast);
+    } catch (err) {
+      const error = new Error(
+        `Check your Python syntax and try again!\n\n${err.message}`,
+      );
+      error.code = 'InvalidPlayerCode';
+      throw error;
+    }
+
+    // Wrap the transpiled code to extract the Player class
+    // Filbert generates prototype-based classes, so we need to make Player accessible
+    const wrappedCode = `
+      (function() {
+        ${jsCode}
+        return Player;
+      })()
+    `;
+
+    // Create a sandbox and run the transpiled code
+    const sandbox = vm.createContext();
+
+    // Do not collect stack frames for errors in the player code.
+    vm.runInContext('Error.stackTraceLimit = 0;', sandbox);
+
+    let PlayerClass;
+    try {
+      PlayerClass = vm.runInContext(wrappedCode, sandbox, {
+        filename: this.getTemplateFilename(),
+        timeout: playerCodeTimeout,
+      });
+    } catch (err) {
+      // Check if it's a "Player is not defined" error
+      if (err.message && err.message.includes('Player is not defined')) {
+        const error = new Error('You must define a Player class!');
+        error.code = 'InvalidPlayerCode';
+        throw error;
+      }
+      const error = new Error(
+        `Check your Python syntax and try again!\n\n${err.message || err}`,
+      );
+      error.code = 'InvalidPlayerCode';
+      throw error;
+    }
+
+    // Check if Player class was defined
+    if (!PlayerClass) {
+      const error = new Error('You must define a Player class!');
+      error.code = 'InvalidPlayerCode';
+      throw error;
+    }
+
+    // Check if play_turn method exists
+    if (typeof PlayerClass.prototype.play_turn !== 'function') {
+      const error = new Error(
+        'Your Player class must define a play_turn method!',
+      );
+      error.code = 'InvalidPlayerCode';
+      throw error;
+    }
+
+    // Create an instance of the Player class
+    const player = new PlayerClass();
+
+    // Return the playTurn function
+    const playTurn = warrior => {
+      try {
+        player.play_turn(warrior);
+      } catch (err) {
+        const error = new Error(err.message);
+        error.code = 'InvalidPlayerCode';
+        throw error;
+      }
+    };
+
+    return playTurn;
   }
 }
 

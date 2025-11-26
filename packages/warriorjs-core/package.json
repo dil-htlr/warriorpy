@@ -35,6 +35,8 @@
     "build": "babel src --out-dir lib --ignore test.js"
   },
   "dependencies": {
-    "@warriorjs/geography": "^0.7.0"
+    "@warriorjs/geography": "^0.7.0",
+    "escodegen": "^2.1.0",
+    "filbert": "^0.1.20"
   }
 }
