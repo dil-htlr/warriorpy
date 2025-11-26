@@ -4,7 +4,7 @@ import path from 'path';
 import globby from 'globby';
 import getLevelConfig from '@warriorjs/helper-get-level-config';
 import getLevelScore from '@warriorjs/helper-get-level-score';
-import { getLevel, runLevel } from '@warriorjs/core';
+import { getLevel, runLevel, languageRegistry } from '@warriorjs/core';
 
 import GameError from './GameError';
 import Profile from './Profile';
@@ -143,12 +143,23 @@ class Game {
     const towerChoices = this.towers;
     const tower = await requestChoice('Choose a tower:', towerChoices);
 
+    const languageChoices = languageRegistry.getAll();
+    const languageAdapter = await requestChoice(
+      'Choose a programming language:',
+      languageChoices,
+    );
+
     const profileDirectoryPath = path.join(
       this.gameDirectoryPath,
       `${warriorName}-${tower.id}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     );
 
-    const profile = new Profile(warriorName, tower, profileDirectoryPath);
+    const profile = new Profile(
+      warriorName,
+      tower,
+      profileDirectoryPath,
+      languageAdapter.getId(),
+    );
 
     if (this.isExistingProfile(profile)) {
       printWarningLine(
@@ -268,14 +279,18 @@ class Game {
    * @returns {boolean} Whether playing can continue or not (for epic mode),
    */
   async playLevel(levelNumber) {
-    const { tower, warriorName, epic } = this.profile;
+    const { tower, warriorName, epic, languageId } = this.profile;
     const levelConfig = getLevelConfig(tower, levelNumber, warriorName, epic);
 
     const level = getLevel(levelConfig);
     printLevel(level);
 
     const playerCode = this.profile.readPlayerCode();
-    const levelResult = runLevel(levelConfig, playerCode);
+    const levelResult = runLevel(
+      levelConfig,
+      playerCode,
+      languageId || 'javascript',
+    );
 
     if (!this.silencePlay) {
       await printPlay(levelResult.events, this.delay);

@@ -1,63 +1,21 @@
-import assert from 'assert';
-import vm from 'vm';
-
-const playerCodeFilename = 'Player.js';
-const playerCodeTimeout = 3000;
+import languageRegistry from './LanguageRegistry';
 
 /**
  * Loads the player code and returns the playTurn function.
  *
  * @param {string} playerCode The code of the player.
+ * @param {string} languageId The language ID (default: 'javascript').
  *
  * @returns {Function} The playTurn function.
  */
-function loadPlayer(playerCode) {
-  const sandbox = vm.createContext();
+function loadPlayer(playerCode, languageId = 'javascript') {
+  const adapter = languageRegistry.get(languageId);
 
-  // Do not collect stack frames for errors in the player code.
-  vm.runInContext('Error.stackTraceLimit = 0;', sandbox);
-
-  try {
-    vm.runInContext(playerCode, sandbox, {
-      filename: playerCodeFilename,
-      timeout: playerCodeTimeout,
-    });
-  } catch (err) {
-    const error = new Error(`Check your syntax and try again!\n\n${err.stack}`);
-    error.code = 'InvalidPlayerCode';
-    throw error;
+  if (!adapter) {
+    throw new Error(`Unknown language: ${languageId}`);
   }
 
-  try {
-    const player = vm.runInContext('new Player();', sandbox, {
-      timeout: playerCodeTimeout,
-    });
-    assert(typeof player.playTurn === 'function', 'playTurn is not defined');
-    const playTurn = turn => {
-      try {
-        player.playTurn(turn);
-      } catch (err) {
-        const error = new Error(err.message);
-        error.code = 'InvalidPlayerCode';
-        throw error;
-      }
-    };
-    return playTurn;
-  } catch (err) {
-    if (err.message === 'Player is not defined') {
-      const error = new Error('You must define a Player class!');
-      error.code = 'InvalidPlayerCode';
-      throw error;
-    } else if (err.message === 'playTurn is not defined') {
-      const error = new Error(
-        'Your Player class must define a playTurn method!',
-      );
-      error.code = 'InvalidPlayerCode';
-      throw error;
-    }
-
-    throw err;
-  }
+  return adapter.loadPlayer(playerCode);
 }
 
 export default loadPlayer;
