@@ -44,6 +44,21 @@ Go to [warriorjs.com](https://warriorjs.com/?ref=gh) and play from the comfort
 of your browser! Sharpen your skills and compete against other players around
 the globe. Good luck in your journey, warrior!
 
+## Web Version (GitHub Pages)
+
+A self-contained browser version is available that can be deployed to GitHub Pages or any static hosting. All game processing happens client-side in the browser:
+
+1. Build the web package:
+```sh
+cd packages/warriorjs-web
+yarn install
+yarn build
+```
+
+2. The `dist` folder contains the deployable static files.
+
+3. GitHub Actions workflow is included for automatic deployment to GitHub Pages.
+
 ## Documentation
 
 Although there is some in-game documentation, at some point you may want to

@@ -1,0 +1,36 @@
+{
+  "name": "@warriorjs/web",
+  "version": "0.14.0",
+  "description": "WarriorJS web interface for browser-based gameplay",
+  "author": "Matias Olivera <moliverafreire@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://warrior.js.org",
+  "repository": "https://github.com/olistic/warriorjs/tree/master/packages/warriorjs-web",
+  "main": "dist/warriorjs-web.js",
+  "files": [
+    "dist",
+    "public"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "start": "webpack serve --mode development --open",
+    "build:dev": "webpack --mode development"
+  },
+  "dependencies": {
+    "@warriorjs/geography": "^0.7.0",
+    "@warriorjs/helper-get-grade-letter": "^0.11.1",
+    "@warriorjs/helper-get-level-config": "^0.12.3",
+    "@warriorjs/helper-get-level-score": "^0.14.0"
+  },
+  "devDependencies": {
+    "css-loader": "^5.2.7",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
+  }
+}
