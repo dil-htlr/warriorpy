@@ -89,7 +89,11 @@ class PythonAdapter extends LanguageAdapter {
       });
     } catch (err) {
       // Check if it's a "Player is not defined" error
-      if (err.message && err.message.includes('Player is not defined')) {
+      // Note: instanceof check doesn't work for errors from VM context
+      if (
+        err.constructor.name === 'ReferenceError' &&
+        err.message === 'Player is not defined'
+      ) {
         const error = new Error('You must define a Player class!');
         error.code = 'InvalidPlayerCode';
         throw error;

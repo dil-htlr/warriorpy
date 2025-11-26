@@ -58,6 +58,41 @@ This approach:
 - ✅ Works in environments without Python installed
 - ⚠️ Supports Python 2.x syntax (Filbert limitation)
 
+#### Supported Python Features
+
+The following Python features are supported for writing player code:
+
+**Supported:**
+- Class definitions (`class Player:`)
+- Instance methods (`def play_turn(self, warrior):`)
+- Function calls (`warrior.walk()`, `warrior.attack('backward')`)
+- Conditional statements (`if`, `elif`, `else`)
+- Loops (`for`, `while`)
+- Basic operators (`+`, `-`, `*`, `/`, `==`, `!=`, `<`, `>`, etc.)
+- Lists and dictionaries
+- Variable assignment
+- Comments (`#`)
+- String literals
+
+**Not Supported / Limited:**
+- Python 3.x specific syntax (use Python 2.x style)
+- Import statements (not needed for player code)
+- Advanced features like decorators, generators, context managers
+- Standard library modules
+
+**Example Valid Player Code:**
+```python
+class Player:
+    def __init__(self):
+        self.health = None
+    
+    def play_turn(self, warrior):
+        if warrior.feel().is_empty():
+            warrior.walk()
+        else:
+            warrior.attack()
+```
+
 ## Adding a New Language
 
 To add support for a new programming language:
